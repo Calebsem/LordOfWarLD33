@@ -5,6 +5,7 @@ public class Neighborhood : MonoBehaviour {
 
     public Dealer FriendlyDealer;
     public float Respect;
+    public string Name;
 
     private MeshRenderer blockRenderer;
 

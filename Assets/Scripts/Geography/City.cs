@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 public class City : MonoBehaviour {
 
@@ -11,6 +13,7 @@ public class City : MonoBehaviour {
     public Vector2 BlockSize = new Vector2(10, 10);
 
     public float[,] CityInfluenceMap;
+    public List<Neighborhood> Neighborhoods;
 
 	// Use this for initialization
 	void Start ()
@@ -32,6 +35,7 @@ public class City : MonoBehaviour {
         var startY = -CitySize.y / 2f * BlockSize.y / 2f;
 
         var randomOffset = Random.Range(-100f, 100f);
+        Neighborhoods = new List<Neighborhood>();
 
         for (int x = 0; x < CitySize.x; x++)
         {
@@ -42,9 +46,17 @@ public class City : MonoBehaviour {
 
                 var neighborhood = block.GetComponent<Neighborhood>();
                 neighborhood.FriendlyDealer = (CityInfluenceMap[x, y] > 0.5f) ? DealerManager.Dealers[1] : null ;
-                neighborhood.Respect = Random.Range(0.5f, 1f);
+                neighborhood.Respect = Random.Range(0.35f, 1f);
+                neighborhood.Name = "Neighboorhood " + x.ToString() + " " + y.ToString();
+                Neighborhoods.Add(neighborhood);
                 block.transform.SetParent(transform);
             }
         }
+        var emptyBlocks = Neighborhoods.Where(n => n.FriendlyDealer == null).ToArray();
+        if (emptyBlocks.Length == 0)
+            emptyBlocks = Neighborhoods.ToArray();
+        var startingBlock = emptyBlocks[Random.Range(0, emptyBlocks.Length)];
+        startingBlock.FriendlyDealer = DealerManager.Dealers[0];
+        startingBlock.Respect = 0.5f;
     }
 }
