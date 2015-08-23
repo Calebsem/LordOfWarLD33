@@ -1,10 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Linq;
 
-public class InputManager : MonoBehaviour {
+public class InputManager : MonoBehaviour
+{
+    public DealerManager DealerManager;
+
     public GameObject InfoPanel;
     public GameObject SupplierPanel;
+
+
+    public Neighborhood SelectedNeighborhood;
+
+    private bool wasClicking;
+
 	// Use this for initialization
 	void Start () {
 	
@@ -17,7 +27,8 @@ public class InputManager : MonoBehaviour {
             return;
         RaycastHit hit;
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit, 100.0f))
+        var hasHit = false;
+        if (hasHit = Physics.Raycast(ray, out hit, 100.0f))
         {
             if (hit.collider.tag == "Neighborhood")
             {
@@ -37,13 +48,22 @@ public class InputManager : MonoBehaviour {
                             break;
                         case "Respect":
                             if (block.FriendlyDealer != null)
-                                c.text = Mathf.RoundToInt(block.Respect * 100f).ToString() + "%";
+                                c.text = Mathf.RoundToInt(block.Respect[block.FriendlyDealer.ID] * 100f).ToString() + "%";
                             else
                                 c.text = "??%";
                             break;
                     }
                 }
+                if (Input.GetMouseButtonDown(0))
+                {
+                    SelectedNeighborhood = block;
+                    //Camera.main.GetComponent<CameraInteraction>().CenterPoint = new Vector3(block.transform.position.x, 0, block.transform.position.z);
+                }
             }
+        }
+        if (!hasHit && Input.GetMouseButtonUp(0))
+        {
+            SelectedNeighborhood = null;
         }
     }
 
