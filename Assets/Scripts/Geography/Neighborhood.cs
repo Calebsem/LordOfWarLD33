@@ -13,8 +13,9 @@ public class Neighborhood : MonoBehaviour {
     private MeshRenderer blockRenderer;
     private InputManager inputManager;
 
-	// Use this for initialization
-	void Start () {
+    public DealerManager DealerManager;
+    // Use this for initialization
+    void Start () {
         blockRenderer = GetComponent<MeshRenderer>();
         inputManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<InputManager>();
 	}
@@ -30,8 +31,12 @@ public class Neighborhood : MonoBehaviour {
             if (blockRenderer.material.color != Color.white)
                 blockRenderer.material.color = Color.white;
         }
+        if ((FriendlyDealer != null && Respect.Max(r => r.Value) > Respect[FriendlyDealer.ID]) || (Respect.Any(r => r.Value > 0)))
+        {
+            FriendlyDealer = DealerManager.Dealers.First(d => d.ID == Respect.First(re => re.Value == Respect.Max(r => r.Value)).Key);
+        }
 
-        if(inputManager.SelectedNeighborhood == this)
+        if (inputManager.SelectedNeighborhood == this)
         {
             transform.position = new Vector3(transform.position.x, 1, transform.position.z);
         }

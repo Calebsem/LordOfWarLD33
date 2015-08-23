@@ -46,11 +46,12 @@ public class City : MonoBehaviour {
                 var block = Instantiate(NeighborhoodPrefab, new Vector3(startX + BlockSize.x * x, 0, startY + BlockSize.y * y), Quaternion.Euler(0, 0, 0)) as GameObject;
 
                 var neighborhood = block.GetComponent<Neighborhood>();
-                neighborhood.FriendlyDealer = (CityInfluenceMap[x, y] > 0.5f) ? DealerManager.Dealers[1] : null ;
+                neighborhood.FriendlyDealer = DealerManager.Dealers[1] ;
+                neighborhood.DealerManager = DealerManager;
                 var respects = new Dictionary<Guid, float>();
                 foreach(var d in DealerManager.Dealers)
                 {
-                    respects.Add(d.ID, Random.Range(0.35f, 1f));
+                    respects.Add(d.ID, Random.Range(0.1f, 1f));
                 }
                 respects[DealerManager.Dealers[0].ID] = 0f;
                 neighborhood.Respect = respects;
@@ -68,5 +69,9 @@ public class City : MonoBehaviour {
         var startingBlock = emptyBlocks[Random.Range(0, emptyBlocks.Length)];
         startingBlock.FriendlyDealer = DealerManager.Dealers[0];
         startingBlock.Respect[DealerManager.Dealers[0].ID] = 0.5f;
+        for(int i = 1; i < startingBlock.Respect.Count; i++)
+        {
+            startingBlock.Respect[DealerManager.Dealers[i].ID] = 0f;
+        }
     }
 }

@@ -26,6 +26,8 @@ public class Dealer : MonoBehaviour {
 
     public List<Weapon> WeaponStock = new List<Weapon>();
 
+    public DealerManager Manager;
+
     // Use this for initialization
     void Start () {
 	    if(IsPlayer)

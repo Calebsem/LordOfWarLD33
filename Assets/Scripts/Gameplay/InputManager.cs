@@ -5,10 +5,10 @@ using System.Linq;
 
 public class InputManager : MonoBehaviour
 {
-    public DealerManager DealerManager;
 
     public GameObject InfoPanel;
     public GameObject SupplierPanel;
+    public GameObject BuyerPanel;
 
 
     public Neighborhood SelectedNeighborhood;
@@ -54,16 +54,18 @@ public class InputManager : MonoBehaviour
                             break;
                     }
                 }
-                if (Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonUp(0))
                 {
                     SelectedNeighborhood = block;
+                    BuyerPanel.SetActive(true);
                     //Camera.main.GetComponent<CameraInteraction>().CenterPoint = new Vector3(block.transform.position.x, 0, block.transform.position.z);
                 }
             }
         }
-        if (!hasHit && Input.GetMouseButtonUp(0))
+        if (!hasHit && Input.GetMouseButtonDown(0))
         {
             SelectedNeighborhood = null;
+            BuyerPanel.SetActive(false);
         }
     }
 

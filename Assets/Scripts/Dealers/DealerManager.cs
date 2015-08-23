@@ -21,7 +21,7 @@ public class DealerManager : MonoBehaviour {
                 props.DealerColor = Color.red;
                 props.Money = 20000;
                 props.Reputation = 0;
-                props.SellTaxRate = 1;
+                props.SellTaxRate = 0.9f;
                 props.BuyTaxRate = 1;
                 props.Name = "player";
                 props.IsPlayer = true;
@@ -37,7 +37,7 @@ public class DealerManager : MonoBehaviour {
                 props.IsPlayer = false;
 
             }
-
+            props.Manager = this;
             Dealers.Add(props);
             dealer.transform.SetParent(transform);
         }
