@@ -33,14 +33,15 @@ public class AvailableBuyers : MonoBehaviour {
         }
         for (int i = 0; i < list.Count; i++)
         {
+            var item = list[i];
             var type = "";
-            foreach (var t in list[i].TypesBuying)
+            foreach (var t in item.TypesBuying)
             {
                 type += t.Key.ToString() + " " + t.Value.ToString() + " - ";
             }
-            Labels[i][0].text = list[i].Name;
+            Labels[i][0].text = item.Name;
             Labels[i][1].text = type;
-            Labels[i][2].text = "$" + list[i].Price.ToString();
+            Labels[i][2].text = "$" + item.Price.ToString() + " x " + item.Duration.ToString();
             Buttons[i].interactable = true;
         }
 

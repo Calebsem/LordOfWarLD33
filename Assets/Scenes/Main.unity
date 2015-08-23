@@ -2469,6 +2469,7 @@ MonoBehaviour:
   City: {fileID: 1693293250}
   SupplierManager: {fileID: 1279304348}
   InputManager: {fileID: 131612299}
+  CargoPrefab: {fileID: 109516, guid: 4792b3768c80d254893a717083f0febf, type: 2}
 --- !u!1 &891565240
 GameObject:
   m_ObjectHideFlags: 0

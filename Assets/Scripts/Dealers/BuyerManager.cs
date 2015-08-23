@@ -22,18 +22,21 @@ public class BuyerManager : MonoBehaviour
 	
 	}
 
-    Buyer GenerateBuyer()
+    public Buyer GenerateBuyer()
     {
         var typeQuantities = new Dictionary<WeaponType, int>();
-        typeQuantities.Add(WeaponType.Handgun, UnityEngine.Random.Range(1, 8));
-        typeQuantities.Add(WeaponType.SMG, UnityEngine.Random.Range(0, 6));
-        typeQuantities.Add(WeaponType.MachineGun, UnityEngine.Random.Range(0, 4));
-        typeQuantities.Add(WeaponType.Explosives, UnityEngine.Random.Range(0, 2));
+        var typeValues = Enum.GetNames(typeof(WeaponType)).ToList();
+        var selling = (WeaponType)Enum.Parse(typeof(WeaponType), typeValues[UnityEngine.Random.Range(0, typeValues.Count)]);
+        typeValues.Remove(selling.ToString());
+        typeQuantities.Add(selling, UnityEngine.Random.Range(1, 3));
+        //var selling2 = (WeaponType)Enum.Parse(typeof(WeaponType), typeValues[UnityEngine.Random.Range(0, typeValues.Count)]);
+        //typeQuantities.Add(selling2, UnityEngine.Random.Range(1, 3));
         return new Buyer
         {
             Name = "Buyer",
             SellRate = (neighborhood.FriendlyDealer == null) ? 1 : neighborhood.FriendlyDealer.SellTaxRate,
-            TypesBuying = typeQuantities
+            TypesBuying = typeQuantities,
+            Duration = UnityEngine.Random.Range(1, 5)
         };
     }
 
@@ -46,7 +49,7 @@ public class BuyerManager : MonoBehaviour
                 AvailableBuyers.RemoveAt(UnityEngine.Random.Range(0, AvailableBuyers.Count - 1));
             }
             AvailableBuyers.Add(GenerateBuyer());
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(Constants.DayDuration);
         }
     }
 }
@@ -58,6 +61,7 @@ public class Buyer
     public string Name = "Supplier";
     public Dictionary<WeaponType, int> TypesBuying { get; set; }
     public float SellRate { get; set; }
+    public int Duration { get; set; }
     public int Price
     {
         get
@@ -70,16 +74,16 @@ public class Buyer
                     switch (t.Key)
                     {
                         case WeaponType.Handgun:
-                            money += (int)(16 / SellRate);
-                            break;
-                        case WeaponType.SMG:
                             money += (int)(40 / SellRate);
                             break;
-                        case WeaponType.MachineGun:
+                        case WeaponType.SMG:
                             money += (int)(80 / SellRate);
                             break;
+                        case WeaponType.MachineGun:
+                            money += (int)(160 / SellRate);
+                            break;
                         case WeaponType.Explosives:
-                            money += (int)(200 / SellRate);
+                            money += (int)(320 / SellRate);
                             break;
                     }
                 }

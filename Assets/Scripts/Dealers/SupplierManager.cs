@@ -21,7 +21,7 @@ public class SupplierManager : MonoBehaviour {
         ContractSuppliers = DealerManager.Dealers[0].ContractSuppliers;
     }
 
-    Supplier GenerateSupplier()
+    public Supplier GenerateSupplier()
     {
         var qualityValues = Enum.GetNames(typeof(WeaponQuality)).ToList();
         var typeValues = Enum.GetNames(typeof(WeaponType)).ToList();
@@ -56,8 +56,11 @@ public class SupplierManager : MonoBehaviour {
                 AvailableSuppliers.RemoveAt(UnityEngine.Random.Range(0, AvailableSuppliers.Count - 1));
             }
             AvailableSuppliers.Add(GenerateSupplier());
-            AvailableSuppliers.Add(GenerateSupplier());
-            yield return new WaitForSeconds(2);
+            if (AvailableSuppliers.Count < 5)
+            {
+                AvailableSuppliers.Add(GenerateSupplier());
+            }
+            yield return new WaitForSeconds(Constants.DayDuration);
         }
     }
 

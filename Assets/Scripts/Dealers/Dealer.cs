@@ -22,9 +22,9 @@ public class Dealer : MonoBehaviour {
     public Text DayLabel;
 
     private float timeOfDay;
-    private const float dayDuration = 10f;
 
     public List<Weapon> WeaponStock = new List<Weapon>();
+    public Dictionary<Neighborhood, List<Buyer>> ContractedBuyers = new Dictionary<Neighborhood, List<Buyer>>();
 
     public DealerManager Manager;
 
@@ -57,7 +57,7 @@ public class Dealer : MonoBehaviour {
                 weapons += WeaponTypes[i] + " : " + count.ToString() + "  ";
             }
             WeaponsLabel.text = weapons;
-            DayLabel.text = (timeOfDay * 100f / dayDuration).ToString("f0") + "%";
+            DayLabel.text = (timeOfDay * 100f / Constants.DayDuration).ToString("f0") + "%";
         }
     }
 
@@ -65,7 +65,7 @@ public class Dealer : MonoBehaviour {
     {
         for(; ;)
         {
-            yield return new WaitForSeconds(dayDuration);
+            yield return new WaitForSeconds(Constants.DayDuration);
             timeOfDay = 0;
             foreach (var c in ContractSuppliers)
             {
@@ -92,74 +92,127 @@ public class Dealer : MonoBehaviour {
                     }
                 }
             }
+
+
+
+            foreach (var n in ContractedBuyers)
+            {
+                var toRemove = new List<Buyer>();
+                foreach(var b in n.Value)
+                {
+                    var canSell = true;
+                    foreach (var t in b.TypesBuying)
+                    {
+                        if (WeaponStock.Where(w => w.Type == t.Key).Count() < t.Value)
+                        {
+                            canSell = false;
+                            break;
+                        }
+                    }
+                    if(!canSell)
+                    {
+                        AffectRespect(-0.025f, n.Key);
+                        continue;
+                    }
+                    var cargo = Instantiate(Manager.CargoPrefab, new Vector3(-22.5f, 5, 7.5f), Quaternion.Euler(0, 0, 0)) as GameObject;
+                    var behavior = cargo.GetComponent<CargoBehavior>();
+                    behavior.Dealer = this;
+                    behavior.Buyer = b;
+                    behavior.Block = n.Key;
+                    b.Duration--;
+                    if (b.Duration == 0)
+                        toRemove.Add(b);
+                    foreach (var t in b.TypesBuying)
+                    {
+                        for (int u = 0; u < t.Value; u++)
+                        {
+                            var weapon = WeaponStock.Where(w => w.Type == t.Key).First();
+                            WeaponStock.Remove(weapon);
+                        }
+                    }
+                    AffectRespect(0.05f, n.Key);
+                    Money += b.Price;
+                }
+                foreach(var r in toRemove)
+                {
+                    n.Value.Remove(r);
+                }
+
+            }
+        }
+    }
+
+    void AffectRespect(float Amount, Neighborhood block)
+    {
+        var neighborBlocks = Manager.City.Neighborhoods.Where(ne => Vector3.Distance(ne.transform.position, block.transform.position) < 20).ToList();
+        neighborBlocks.Remove(block);
+        block.Respect[ID] += Amount;
+        block.Respect[ID] = Mathf.Clamp(block.Respect[ID], 0, 1);
+
+
+        for (int u = 1; u < Manager.Dealers.Where(d => d != this).ToList().Count; u++)
+        {
+            block.Respect[Manager.Dealers[u].ID] -= Amount / 2f;
+            block.Respect[Manager.Dealers[u].ID] = Mathf.Clamp(block.Respect[Manager.Dealers[u].ID], 0, 1);
+        }
+        foreach (var n in neighborBlocks)
+        {
+            n.Respect[ID] += Amount / 2f;
+            n.Respect[ID] = Mathf.Clamp(n.Respect[ID], 0, 1);
+            for (int u = 1; u < Manager.Dealers.Where(d => d != this).ToList().Count; u++)
+            {
+                n.Respect[Manager.Dealers[u].ID] -= Amount / 4f;
+                n.Respect[Manager.Dealers[u].ID] = Mathf.Clamp(n.Respect[Manager.Dealers[u].ID], 0, 1);
+            }
         }
     }
 
     IEnumerator DealerAI()
     {
         var addSupplier = 0f;
-        for(; ;)
+        for (; ;)
         {
             yield return new WaitForSeconds(0.5f);
-            
-            if (addSupplier % 5 == 0 &&ContractSuppliers.Count < 5 && Manager.SupplierManager.AvailableSuppliers.Count > 0)
+
+            if (addSupplier % 5 == 0 && ContractSuppliers.Count < 5 && Manager.SupplierManager.AvailableSuppliers.Count > 0)
             {
-                var contract = Manager.SupplierManager.AvailableSuppliers[0];
+                var contract = Manager.SupplierManager.GenerateSupplier();
                 ContractSuppliers.Add(contract);
-                Manager.SupplierManager.AvailableSuppliers.Remove(contract);
                 addSupplier = 0;
             }
             addSupplier += 0.5f;
 
             var blockId = UnityEngine.Random.Range(0, Manager.City.Neighborhoods.Count);
             var block = Manager.City.Neighborhoods[blockId].GetComponent<BuyerManager>();
-            var buyer = block.AvailableBuyers[UnityEngine.Random.Range(0, block.AvailableBuyers.Count)];
+            var buyer = block.GenerateBuyer();
+            SellToDealer(buyer, Manager.City.Neighborhoods[blockId]);
+        }
+    }
 
-            var canSell = true;
-            foreach (var t in buyer.TypesBuying)
+    public bool SellToDealer(Buyer buyer, Neighborhood block)
+    {
+        var canSell = true;
+
+        if (block.Respect[ID] < 0.2f)
+            return false;
+        foreach (var t in buyer.TypesBuying)
+        {
+            if (WeaponStock.Where(w => w.Type == t.Key).Count() < t.Value)
             {
-                if (WeaponStock.Where(w => w.Type == t.Key).Count() < t.Value)
-                {
-                    canSell = false;
-                    break;
-                }
-            }
-            if (canSell)
-            {
-                foreach (var t in buyer.TypesBuying)
-                {
-                    for (int u = 0; u < t.Value; u++)
-                    {
-                        var weapon = WeaponStock.Where(w => w.Type == t.Key).First();
-                        WeaponStock.Remove(weapon);
-                    }
-                }
-                var neighborBlocks = Manager.City.Neighborhoods.Where(n => Vector3.Distance(n.transform.position, block.transform.position) < 20).ToList();
-                neighborBlocks.Remove(Manager.City.Neighborhoods[blockId]);
-                Manager.City.Neighborhoods[blockId].Respect[ID] += 0.05f;
-                Manager.City.Neighborhoods[blockId].Respect[ID] = Mathf.Clamp(Manager.City.Neighborhoods[blockId].Respect[ID], 0, 1);
-
-
-                for (int u = 1; u < Manager.Dealers.Where(d => d != this).ToList().Count; u++)
-                {
-                    Manager.City.Neighborhoods[blockId].Respect[Manager.Dealers[u].ID] -= 0.025f;
-                    Manager.City.Neighborhoods[blockId].Respect[Manager.Dealers[u].ID] = Mathf.Clamp(Manager.City.Neighborhoods[blockId].Respect[Manager.Dealers[u].ID], 0, 1);
-                }
-                foreach (var n in neighborBlocks)
-                {
-                    n.Respect[ID] += 0.025f;
-                    n.Respect[ID] = Mathf.Clamp(n.Respect[ID], 0, 1);
-                    for (int u = 1; u < Manager.Dealers.Where(d => d != this).ToList().Count; u++)
-                    {
-                        n.Respect[Manager.Dealers[u].ID] -= 0.0125f;
-                        n.Respect[Manager.Dealers[u].ID] = Mathf.Clamp(n.Respect[Manager.Dealers[u].ID], 0, 1);
-                    }
-                }
-                block.AvailableBuyers.Remove(buyer);
-                Money += buyer.Price;
-                Debug.Log("buy");
+                canSell = false;
+                break;
             }
         }
+        if (canSell)
+        {
+            if(!ContractedBuyers.ContainsKey(block))
+            {
+                ContractedBuyers.Add(block, new List<Buyer>());
+            }
+            ContractedBuyers[block].Add(buyer);
+
+        }
+        return canSell;
     }
 }
 

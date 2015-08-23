@@ -12,6 +12,7 @@ public class DealerManager : MonoBehaviour {
     public City City;
     public SupplierManager SupplierManager;
     public InputManager InputManager;
+    public GameObject CargoPrefab;
 
     // Use this for initialization
     void Start () {

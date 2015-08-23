@@ -51,7 +51,7 @@ public class City : MonoBehaviour {
                 var respects = new Dictionary<Guid, float>();
                 foreach(var d in DealerManager.Dealers)
                 {
-                    respects.Add(d.ID, Random.Range(0.1f, 1f));
+                    respects.Add(d.ID, Random.Range(0f, 0.5f));
                 }
                 respects[DealerManager.Dealers[0].ID] = 0f;
                 neighborhood.Respect = respects;
