@@ -9,8 +9,12 @@ public class DealerManager : MonoBehaviour {
 
     public int DealerCount = 2;
 
-	// Use this for initialization
-	void Start () {
+    public City City;
+    public SupplierManager SupplierManager;
+    public InputManager InputManager;
+
+    // Use this for initialization
+    void Start () {
         Dealers = new List<Dealer>();
 	    for(int i = 0; i < DealerCount; i++)
         {

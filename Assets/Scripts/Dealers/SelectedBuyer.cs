@@ -9,6 +9,7 @@ public class SelectedBuyer : MonoBehaviour {
     public List<Text> TextInputs;
     public AvailableBuyers Buyers;
     public DealerManager DealerManager;
+    public City City;
     // Use this for initialization
     void Start () {
         TextInputs = GetComponentsInChildren<Text>().ToList();
@@ -67,13 +68,26 @@ public class SelectedBuyer : MonoBehaviour {
                 DealerManager.Dealers[0].WeaponStock.Remove(weapon);
             }
         }
+        var neighborBlocks = City.Neighborhoods.Where(n => Vector3.Distance(n.transform.position, InputManager.SelectedNeighborhood.transform.position) < 20).ToList();
+        neighborBlocks.Remove(InputManager.SelectedNeighborhood);
         InputManager.SelectedNeighborhood.Respect[DealerManager.Dealers[0].ID] += 0.05f;
         InputManager.SelectedNeighborhood.Respect[DealerManager.Dealers[0].ID] = Mathf.Clamp(InputManager.SelectedNeighborhood.Respect[DealerManager.Dealers[0].ID], 0, 1);
+
 
         for (int u = 1; u < DealerManager.Dealers.Count; u++)
         {
             InputManager.SelectedNeighborhood.Respect[DealerManager.Dealers[u].ID] -= 0.025f;
             InputManager.SelectedNeighborhood.Respect[DealerManager.Dealers[u].ID] = Mathf.Clamp(InputManager.SelectedNeighborhood.Respect[DealerManager.Dealers[u].ID], 0, 1);
+        }
+        foreach (var n in neighborBlocks)
+        {
+            n.Respect[DealerManager.Dealers[0].ID] += 0.025f;
+            n.Respect[DealerManager.Dealers[0].ID] = Mathf.Clamp(n.Respect[DealerManager.Dealers[0].ID], 0, 1);
+            for (int u = 1; u < DealerManager.Dealers.Count; u++)
+            {
+                n.Respect[DealerManager.Dealers[u].ID] -= 0.0125f;
+                n.Respect[DealerManager.Dealers[u].ID] = Mathf.Clamp(n.Respect[DealerManager.Dealers[u].ID], 0, 1);
+            }
         }
         Buyers.BuyerManager.AvailableBuyers.RemoveAt(i);
         DealerManager.Dealers[0].Money += buyer.Price;

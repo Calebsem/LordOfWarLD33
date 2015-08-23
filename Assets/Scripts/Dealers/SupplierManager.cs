@@ -24,11 +24,13 @@ public class SupplierManager : MonoBehaviour {
     Supplier GenerateSupplier()
     {
         var qualityValues = Enum.GetNames(typeof(WeaponQuality)).ToList();
+        var typeValues = Enum.GetNames(typeof(WeaponType)).ToList();
+        var selling = (WeaponType)Enum.Parse(typeof(WeaponType), typeValues[UnityEngine.Random.Range(0, typeValues.Count)]);
+        typeValues.Remove(selling.ToString());
+        var selling2 = (WeaponType)Enum.Parse(typeof(WeaponType), typeValues[UnityEngine.Random.Range(0, typeValues.Count)]);
         var typeQuantities = new Dictionary<WeaponType, int>();
-        typeQuantities.Add(WeaponType.Handgun, 3);
-        typeQuantities.Add(WeaponType.SMG, 2);
-        typeQuantities.Add(WeaponType.MachineGun, 1);
-        typeQuantities.Add(WeaponType.Explosives, 1);
+        typeQuantities.Add(selling, UnityEngine.Random.Range(1,3));
+        typeQuantities.Add(selling2, UnityEngine.Random.Range(1, 3));
 
         var respects = new Dictionary<Guid, float>();
         foreach(var d in DealerManager.Dealers)
@@ -53,6 +55,7 @@ public class SupplierManager : MonoBehaviour {
             {
                 AvailableSuppliers.RemoveAt(UnityEngine.Random.Range(0, AvailableSuppliers.Count - 1));
             }
+            AvailableSuppliers.Add(GenerateSupplier());
             AvailableSuppliers.Add(GenerateSupplier());
             yield return new WaitForSeconds(2);
         }

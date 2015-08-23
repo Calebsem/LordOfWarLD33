@@ -36,6 +36,10 @@ public class Dealer : MonoBehaviour {
             WeaponsLabel = GameObject.Find("WeaponsLabel").GetComponent<Text>();
             DayLabel = GameObject.Find("DayLabel").GetComponent<Text>();
         }
+        else
+        {
+            StartCoroutine("DealerAI");
+        }
         StartCoroutine("DayCycle");
     }
 	
@@ -87,6 +91,73 @@ public class Dealer : MonoBehaviour {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    IEnumerator DealerAI()
+    {
+        var addSupplier = 0f;
+        for(; ;)
+        {
+            yield return new WaitForSeconds(0.5f);
+            
+            if (addSupplier % 5 == 0 &&ContractSuppliers.Count < 5 && Manager.SupplierManager.AvailableSuppliers.Count > 0)
+            {
+                var contract = Manager.SupplierManager.AvailableSuppliers[0];
+                ContractSuppliers.Add(contract);
+                Manager.SupplierManager.AvailableSuppliers.Remove(contract);
+                addSupplier = 0;
+            }
+            addSupplier += 0.5f;
+
+            var blockId = UnityEngine.Random.Range(0, Manager.City.Neighborhoods.Count);
+            var block = Manager.City.Neighborhoods[blockId].GetComponent<BuyerManager>();
+            var buyer = block.AvailableBuyers[UnityEngine.Random.Range(0, block.AvailableBuyers.Count)];
+
+            var canSell = true;
+            foreach (var t in buyer.TypesBuying)
+            {
+                if (WeaponStock.Where(w => w.Type == t.Key).Count() < t.Value)
+                {
+                    canSell = false;
+                    break;
+                }
+            }
+            if (canSell)
+            {
+                foreach (var t in buyer.TypesBuying)
+                {
+                    for (int u = 0; u < t.Value; u++)
+                    {
+                        var weapon = WeaponStock.Where(w => w.Type == t.Key).First();
+                        WeaponStock.Remove(weapon);
+                    }
+                }
+                var neighborBlocks = Manager.City.Neighborhoods.Where(n => Vector3.Distance(n.transform.position, block.transform.position) < 20).ToList();
+                neighborBlocks.Remove(Manager.City.Neighborhoods[blockId]);
+                Manager.City.Neighborhoods[blockId].Respect[ID] += 0.05f;
+                Manager.City.Neighborhoods[blockId].Respect[ID] = Mathf.Clamp(Manager.City.Neighborhoods[blockId].Respect[ID], 0, 1);
+
+
+                for (int u = 1; u < Manager.Dealers.Where(d => d != this).ToList().Count; u++)
+                {
+                    Manager.City.Neighborhoods[blockId].Respect[Manager.Dealers[u].ID] -= 0.025f;
+                    Manager.City.Neighborhoods[blockId].Respect[Manager.Dealers[u].ID] = Mathf.Clamp(Manager.City.Neighborhoods[blockId].Respect[Manager.Dealers[u].ID], 0, 1);
+                }
+                foreach (var n in neighborBlocks)
+                {
+                    n.Respect[ID] += 0.025f;
+                    n.Respect[ID] = Mathf.Clamp(n.Respect[ID], 0, 1);
+                    for (int u = 1; u < Manager.Dealers.Where(d => d != this).ToList().Count; u++)
+                    {
+                        n.Respect[Manager.Dealers[u].ID] -= 0.0125f;
+                        n.Respect[Manager.Dealers[u].ID] = Mathf.Clamp(n.Respect[Manager.Dealers[u].ID], 0, 1);
+                    }
+                }
+                block.AvailableBuyers.Remove(buyer);
+                Money += buyer.Price;
+                Debug.Log("buy");
             }
         }
     }
